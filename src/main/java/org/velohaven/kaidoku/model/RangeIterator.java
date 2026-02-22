@@ -5,15 +5,15 @@ import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 /**
- * Generic iterator for iterating over elements of a Range.
+ * Generic iterable for iterating over elements of a Range.
+ * This class can be used multiple times in for-each loops without issues.
  *
  * @param <T> the type of elements returned by this iterator
  */
-public class RangeIterator<T> implements Iterable<T>, Iterator<T> {
+public class RangeIterator<T> implements Iterable<T> {
 
     private final Function<Integer, T> mapper;
     private final int maxIndex;
-    private int currentIndex;
 
     /**
      * Creates a new RangeIterator.
@@ -24,25 +24,26 @@ public class RangeIterator<T> implements Iterable<T>, Iterator<T> {
     public RangeIterator(Function<Integer, T> mapper, int maxIndex) {
         this.mapper = mapper;
         this.maxIndex = maxIndex;
-        this.currentIndex = 0;
-    }
-
-    @Override
-    public boolean hasNext() {
-        return currentIndex < maxIndex;
     }
 
     @Override
     public Iterator<T> iterator() {
-        return this;
-    }
+        return new Iterator<>() {
+            private int currentIndex = 0;
 
-    @Override
-    public T next() {
-        if (!hasNext()) {
-            throw new NoSuchElementException();
-        }
-        return mapper.apply(currentIndex++);
+            @Override
+            public boolean hasNext() {
+                return currentIndex < maxIndex;
+            }
+
+            @Override
+            public T next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                return mapper.apply(currentIndex++);
+            }
+        };
     }
 }
 

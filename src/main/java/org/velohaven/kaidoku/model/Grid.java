@@ -2,65 +2,58 @@ package org.velohaven.kaidoku.model;
 
 import java.util.Objects;
 
-public class Grid extends Range<Grid> {
+public class Grid extends Range {
 
-    private final int boxRowNo;
-    private final int boxColumnNo;
+    private final CellStorage cellStorage;
+    private final int boxRowCount;
+    private final int boxColumnCount;
 
-    private final Cell[] cells;
 
-    public Grid(int boxRowNo, int columns) {
-        super(null, 0, boxRowNo * columns, boxRowNo * columns);
-        this.boxRowNo = boxRowNo;
-        this.boxColumnNo = columns;
-        cells = new Cell[boxRowNo * boxColumnNo];
+    public Grid(CellStorage cellStorage, int boxRowCount, int boxColumnCount) {
+        super(null, 0, 0, cellStorage.getRowCount(), cellStorage.getColumnCount());
+        int expectedSize = boxRowCount * boxColumnCount * boxRowCount * boxColumnCount;
+        if (cellStorage.getSize() != expectedSize) {
+            throw new IllegalArgumentException("CellStorage size (" + cellStorage.getSize()
+                    + ") does not match grid capacity (" + expectedSize + ")"
+            );
+        }
+        this.cellStorage = cellStorage;
+        this.boxRowCount = boxRowCount;
+        this.boxColumnCount = boxColumnCount;
     }
 
-    @Override
-    public Grid getParent() {
-        return null;
+    public int getBoxCount() {
+        return getColumnCount();
     }
 
-    @Override
-    public int getPosition() {
-        return 0;
+    public int getBoxRowCount() {
+        return boxRowCount;
     }
 
-    @Override
-    public int getRowNo() {
-        return boxRowNo * boxColumnNo;
+    public int getBoxColumnCount() {
+        return boxColumnCount;
     }
 
-    @Override
-    public int getColumnNo() {
-        return boxRowNo * boxColumnNo;
+    public Range getBox(int index) {
+        Objects.checkIndex(index, getBoxCount());
+        int row = (index / getBoxColumnCount()) * getBoxColumnCount();
+        int column = (index % getBoxRowCount()) * getBoxColumnCount();
+        return getBox(row, column);
     }
 
-    public int getBoxNo() {
-        return getColumnNo();
+    private Range getBox(int row, int column) {
+        Objects.checkIndex(row, getRowCount());
+        Objects.checkIndex(column, getColumnCount());
+        return new Range(this, row, column, getBoxRowCount(), getBoxColumnCount());
     }
 
-    public int getBoxRowNo() {
-        return boxRowNo;
+
+    public RangeIterator<Range> getBoxes() {
+        return new RangeIterator<>(this::getBox, getBoxCount());
     }
 
-    public int getBoxColumnNo() {
-        return boxColumnNo;
-    }
-
-    public Range<Grid> getBox(int index) {
-        Objects.checkIndex(index, getBoxNo());
-        return new Range<>(getParent(), index, getBoxRowNo(), getBoxColumnNo());
-    }
-
-    public RangeIterator<Range<Grid>> getBoxes() {
-        return new RangeIterator<>(this::getBox, getRowNo());
-    }
-
-    @Override
-    public Range<Grid> getCell(int index) {
-        Objects.checkIndex(index, getCellNo());
-        return cells[index];
+    CellContent getContent(int rowIndex, int columnIndex) {
+        return cellStorage.get(rowIndex, columnIndex);
     }
 
 }

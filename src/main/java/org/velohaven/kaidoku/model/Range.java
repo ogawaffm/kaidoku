@@ -2,18 +2,36 @@ package org.velohaven.kaidoku.model;
 
 import java.util.Objects;
 
-public class Range<P extends Range<P>> {
+public class Range {
 
-    private final P parent;
-    private final int position;
-    private final int rowNo;
-    private final int columnNo;
+    private final Range parent;
+    private final int row;
+    private final int column;
+    private final int rowCount;
+    private final int columnCount;
 
-    Range(P parent, int position, int rowNo, int columnNo) {
+    Range(Range parent, int row, int column, int rowCount, int columnCount) {
         this.parent = parent;
-        this.position = position;
-        this.rowNo = rowNo;
-        this.columnNo = columnNo;
+        this.row = row;
+        this.column = column;
+        this.rowCount = rowCount;
+        this.columnCount = columnCount;
+        if (rowCount <= 0) {
+            throw new IllegalArgumentException("rowCount must be positive, got: " + rowCount);
+        }
+        if (columnCount <= 0) {
+            throw new IllegalArgumentException("columnCount must be positive, got: " + columnCount);
+        }
+        if (row < 0) {
+            throw new IllegalArgumentException("row must be non-negative, got: " + row);
+        }
+        if (column < 0) {
+            throw new IllegalArgumentException("row must be non-negative, got: " + column);
+        }
+//        if (getParent() != null && position >= getParent().getCellCount()) {
+//            throw new IllegalArgumentException("Position must be less than the number of cells ("
+//                    + getCellCount() + "), got: " + position);
+//        }
     }
 
     /**
@@ -26,12 +44,24 @@ public class Range<P extends Range<P>> {
      *
      * @return the parent range of this range, or null if this range is a grid
      */
-    public P getParent() {
+    public Range getParent() {
         return parent;
     }
 
-    public int getPosition() {
-        return position;
+    public int getRow() {
+        return row;
+    }
+
+    public int getColumn() {
+        return column;
+    }
+
+    public int getGridRow() {
+        return getParent() == null ? getRow() : getParent().getGridRow() + getRow();
+    }
+
+    public int getGridColumn() {
+        return getParent() == null ? getColumn() : getParent().getGridColumn() + getColumn();
     }
 
     /**
@@ -44,8 +74,8 @@ public class Range<P extends Range<P>> {
      *
      * @return number of rows
      */
-    public int getRowNo() {
-        return rowNo;
+    public int getRowCount() {
+        return rowCount;
     }
 
     /**
@@ -58,8 +88,8 @@ public class Range<P extends Range<P>> {
      *
      * @return number of columns
      */
-    public int getColumnNo() {
-        return columnNo;
+    public int getColumnCount() {
+        return columnCount;
     }
 
     /**
@@ -69,53 +99,66 @@ public class Range<P extends Range<P>> {
      * @return the grid that this range belongs to
      */
     public Grid getGrid() {
-        if (getParent() == null) {
-            return (Grid) this;
-        } else {
-            return getParent().getGrid();
-        }
+        return getParent() == null
+                ? (Grid) this
+                : getParent().getGrid();
     }
 
-
-    public int getCellNo() {
-        return getRowNo() * getColumnNo();
+    public int getCellCount() {
+        return getRowCount() * getColumnCount();
     }
 
     /**
-     * Returns the Cell with the given index. The index starts from 0 to getCellNo()-1.
+     * Returns the Cell with the given index. The index starts from 0 to getCellCount()-1.
      *
      * @param index index of the cell to return
      * @return the Cell with the given index
      */
-    public Range<P> getCell(int index) {
-        Objects.checkIndex(index, getCellNo());
-        int xOffset = getPosition() % getGrid().getColumnNo();
-        int yOffset = getPosition() / getGrid().getColumnNo();
-        int xAddOn = index % getColumnNo();
-        int yAddOn = index / getColumnNo();
-        return getGrid().getCell((xOffset + xAddOn) + (yOffset + yAddOn) * getGrid().getColumnNo());
+    public Range getCell(int index) {
+        Objects.checkIndex(index, getCellCount());
+        return getCell(index / getColumnCount(), index % getColumnCount());
     }
 
-    public Range<P> getRow(int index) {
-        Objects.checkIndex(index, getRowNo());
-        return new Range<>(getParent(), index * getColumnNo(), 1, getColumnNo());
+    public Range getCell(int row, int column) {
+        Objects.checkIndex(row, getRowCount());
+        Objects.checkIndex(column, getColumnCount());
+        return new Range(this, getGridRow() + row, getGridColumn() + column, 1, 1);
     }
 
-    public Range<P> getColumn(int index) {
-        Objects.checkIndex(index, getColumnNo());
-        return new Range<>(getParent(), index, getRowNo(), 1);
+    public Range getRow(int index) {
+        Objects.checkIndex(index, getRowCount());
+        return new Range(this, index, 0, 1, getColumnCount());
     }
 
-    public RangeIterator<Range<P>> getCells() {
-        return new RangeIterator<>(this::getCell, getCellNo());
+    public Range getColumn(int index) {
+        Objects.checkIndex(index, getColumnCount());
+        return new Range(this, 0, index, getRowCount(), 1);
     }
 
-    public RangeIterator<Range<P>> getRows() {
-        return new RangeIterator<>(this::getRow, getRowNo());
+    public RangeIterator<Range> getCells() {
+        return new RangeIterator<>(this::getCell, getCellCount());
     }
 
-    public RangeIterator<Range<P>> getColumns() {
-        return new RangeIterator<>(this::getColumn, getColumnNo());
+    public RangeIterator<Range> getRows() {
+        return new RangeIterator<>(this::getRow, getRowCount());
+    }
+
+    public RangeIterator<Range> getColumns() {
+        return new RangeIterator<>(this::getColumn, getColumnCount());
+    }
+
+    /**
+     * Returns the content of this range.
+     * This method only works for ranges of type CELL.
+     *
+     * @return the content of the cell
+     * @throws IllegalStateException if this range is not a cell
+     */
+    public CellContent getContent() {
+        if (getType() != RANGE_TYPE.CELL) {
+            throw new IllegalStateException("getContent() can only be called on CELL ranges, not on " + getType());
+        }
+        return getGrid().getContent(getGridRow(), getGridColumn());
     }
 
     /**
@@ -139,18 +182,18 @@ public class Range<P extends Range<P>> {
             return RANGE_TYPE.GRID;
         }
 
-        if (getRowNo() == 1 && getColumnNo() == 1) {
+        if (getRowCount() == 1 && getColumnCount() == 1) {
             return RANGE_TYPE.CELL;
         }
 
-        if (getRowNo() == 1) {
-            return getColumnNo() == getGrid().getColumnNo()
+        if (getRowCount() == 1) {
+            return getColumnCount() == getGrid().getColumnCount()
                     ? RANGE_TYPE.ROW
                     : RANGE_TYPE.BOX_ROW;
         }
 
-        if (getColumnNo() == 1) {
-            return getRowNo() == getGrid().getRowNo()
+        if (getColumnCount() == 1) {
+            return getRowCount() == getGrid().getRowCount()
                     ? RANGE_TYPE.COLUMN
                     : RANGE_TYPE.BOX_COLUMN;
         }
@@ -160,9 +203,86 @@ public class Range<P extends Range<P>> {
     }
 
     @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof Range otherRange)) {
+            return false;
+        }
+
+        // Compare structural properties
+        if (this.getRow() != otherRange.getRow()
+                || this.getColumn() != otherRange.getColumn()
+                || this.getRowCount() != otherRange.getRowCount()
+                || this.getColumnCount() != otherRange.getColumnCount()) {
+            return false;
+        }
+
+        // Compare content of all cells
+        for (int index = 0; index < this.getCellCount(); index++) {
+            CellContent thisContent = this.getCell(index).getContent();
+            CellContent otherContent = otherRange.getCell(index).getContent();
+            if (!Objects.equals(thisContent, otherContent)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(row, column, rowCount, columnCount);
+        for (int index = 0; index < getCellCount(); index++) {
+            result = 31 * result + Objects.hashCode(getCell(index).getContent());
+        }
+        return result;
+    }
+
+    public static String toSubscript(String input) {
+        if (input == null) {
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder(input.length());
+
+        for (char c : input.toCharArray()) {
+            if (c >= '0' && c <= '9') {
+                sb.append((char) ('₀' + (c - '0')));
+            } else {
+                sb.append(c);
+            }
+        }
+
+        return sb.toString();
+    }
+
+    @Override
     public String toString() {
-        // TODO add column and row information for cells, rows and columns
-        return getType().toString().toLowerCase() + " " + getPosition();
+        String string = null;
+
+        if (getType() == RANGE_TYPE.GRID) {
+            string = "Grid";
+        } else if (getType() == RANGE_TYPE.ROW || getType() == RANGE_TYPE.BOX_ROW) {
+            string = getParent() + " Row" + getRow();
+        } else if (getType() == RANGE_TYPE.COLUMN || getType() == RANGE_TYPE.BOX_COLUMN) {
+            string = getParent() + " Column" + getColumn();
+        } else if (getType() == RANGE_TYPE.BOX) {
+            string = "Box" + (getRow() / getGrid().getBoxColumnCount() * getGrid().getBoxColumnCount() + getColumn() / getGrid().getBoxRowCount());
+        } else if (getType() == RANGE_TYPE.CELL) {
+            string = getParent() + " Cell";
+            if (getParent().getType() == RANGE_TYPE.GRID || getParent().getType() == RANGE_TYPE.BOX) {
+                string += getRow() + "," + getColumn();
+            } else if (getParent().getType() == RANGE_TYPE.ROW || getParent().getType() == RANGE_TYPE.BOX_ROW) {
+                // row
+                string += getColumn();
+            } else {
+                // column
+                string += getRow();
+            }
+        }
+        return toSubscript(string);
     }
 
 }
