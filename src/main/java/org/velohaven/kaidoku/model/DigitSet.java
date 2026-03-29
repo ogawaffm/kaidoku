@@ -110,13 +110,6 @@ public final class DigitSet implements Iterable<Integer>, Comparable<DigitSet> {
                 remaining ^= lowestBit;
                 return Integer.numberOfTrailingZeros(lowestBit) + 1;
             }
-
-            @Override
-            public void remove() {
-                throw new UnsupportedOperationException(
-                    "DigitSet is immutable; iterator.remove() is not supported."
-                );
-            }
         };
     }
 

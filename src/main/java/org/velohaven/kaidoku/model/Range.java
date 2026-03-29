@@ -148,17 +148,31 @@ public class Range {
     }
 
     /**
-     * Returns the content of this range.
+     * Returns the DigitSet of this range.
      * This method only works for ranges of type CELL.
      *
-     * @return the content of the cell
+     * @return the DigitSet of the cell
      * @throws IllegalStateException if this range is not a cell
      */
-    public CellContent getContent() {
+    public DigitSet getDigitSet() {
         if (getType() != RANGE_TYPE.CELL) {
-            throw new IllegalStateException("getContent() can only be called on CELL ranges, not on " + getType());
+            throw new IllegalStateException("getDigitSet() can only be called on CELL ranges, not on " + getType());
         }
-        return getGrid().getContent(getGridRow(), getGridColumn());
+        return getGrid().getDigitSet(getGridRow(), getGridColumn());
+    }
+
+    /**
+     * Sets the DigitSet of this range.
+     * This method only works for ranges of type CELL.
+     *
+     * @return the DigitSet ofto set
+     * @throws IllegalStateException if this range is not a cell
+     */
+    public void setDigitSet(DigitSet digitSet) {
+        if (getType() != RANGE_TYPE.CELL) {
+            throw new IllegalStateException("setDigitSet() can only be called on CELL ranges, not on " + getType());
+        }
+        getGrid().setDigitSet(getGridRow(), getGridColumn(), digitSet);
     }
 
     /**

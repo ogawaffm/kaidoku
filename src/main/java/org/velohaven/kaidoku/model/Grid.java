@@ -4,20 +4,19 @@ import java.util.Objects;
 
 public class Grid extends Range {
 
-    private final CellStorage cellStorage;
+    private final DigitSetStorage digitSetStorage;
     private final int boxRowCount;
     private final int boxColumnCount;
 
-
-    public Grid(CellStorage cellStorage, int boxRowCount, int boxColumnCount) {
-        super(null, 0, 0, cellStorage.getRowCount(), cellStorage.getColumnCount());
+    public Grid(DigitSetStorage digitSetStorage, int boxRowCount, int boxColumnCount) {
+        super(null, 0, 0, digitSetStorage.getRowCount(), digitSetStorage.getColumnCount());
         int expectedSize = boxRowCount * boxColumnCount * boxRowCount * boxColumnCount;
-        if (cellStorage.getSize() != expectedSize) {
-            throw new IllegalArgumentException("CellStorage size (" + cellStorage.getSize()
+        if (digitSetStorage.getSize() != expectedSize) {
+            throw new IllegalArgumentException("digitSetStorage size (" + digitSetStorage.getSize()
                     + ") does not match grid capacity (" + expectedSize + ")"
             );
         }
-        this.cellStorage = cellStorage;
+        this.digitSetStorage = digitSetStorage;
         this.boxRowCount = boxRowCount;
         this.boxColumnCount = boxColumnCount;
     }
@@ -52,8 +51,12 @@ public class Grid extends Range {
         return new RangeIterator<>(this::getBox, getBoxCount());
     }
 
-    CellContent getContent(int rowIndex, int columnIndex) {
-        return cellStorage.get(rowIndex, columnIndex);
+    DigitSet getDigitSet(int rowIndex, int columnIndex) {
+        return digitSetStorage.get(rowIndex, columnIndex);
+    }
+
+    void setDigitSet(int rowIndex, int columnIndex, DigitSet digitSet) {
+        return digitSetStorage.set(rowIndex, columnIndex, digitSet);
     }
 
 }
