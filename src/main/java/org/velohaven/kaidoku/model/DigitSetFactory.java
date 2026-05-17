@@ -1,5 +1,7 @@
 package org.velohaven.kaidoku.model;
 
+import static org.velohaven.kaidoku.model.Validation.checkValue;
+
 public final class DigitSetFactory {
 
     private final int maxSize;
@@ -48,11 +50,7 @@ public final class DigitSetFactory {
     }
 
     void validateDigit(int digit) {
-        if (digit < 1 || digit > maxSize) {
-            throw new IllegalArgumentException(
-                "digit must be between 1 and " + maxSize + ": " + digit
-            );
-        }
+        checkValue(digit, 1, maxSize, "digit");
     }
 
     DigitSet create(int requestedDigits, DigitSet current) {
@@ -72,14 +70,15 @@ public final class DigitSetFactory {
     }
 
     private static void validateMaxSize(int maxSize) {
-        if (maxSize < 1 || maxSize > 32) {
-            throw new IllegalArgumentException(
-                "maxSize must be between 1 and 32: " + maxSize
-            );
-        }
+        checkValue(maxSize, 1, 32, "maxSize");
     }
 
     private static int createUsableMask(int maxSize) {
         return maxSize == 32 ? -1 : (1 << maxSize) - 1;
+    }
+
+    @Override
+    public String toString() {
+        return "DigitSetFactory(maxSize=" + maxSize + ")";
     }
 }

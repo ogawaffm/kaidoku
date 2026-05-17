@@ -5,9 +5,11 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
+import static org.velohaven.kaidoku.model.Validation.requireNonNull;
+
 public final class DigitSet implements Iterable<Integer>, Comparable<DigitSet> {
 
-    private static final char FIRST_SYMBOL = '\u2460'; // ①
+    private static final char CIRCLED_DIGIT_ONE = '①'; // ①
 
     private final DigitSetFactory factory;
     private final int digits;
@@ -115,7 +117,7 @@ public final class DigitSet implements Iterable<Integer>, Comparable<DigitSet> {
 
     @Override
     public int compareTo(DigitSet other) {
-        Objects.requireNonNull(other, "other must not be null");
+        requireNonNull(other, "other");
 
         int sizeCompare = Integer.compare(this.size(), other.size());
         if (sizeCompare != 0) {
@@ -169,11 +171,10 @@ public final class DigitSet implements Iterable<Integer>, Comparable<DigitSet> {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof DigitSet)) {
+        if (!(obj instanceof DigitSet other)) {
             return false;
         }
 
-        DigitSet other = (DigitSet) obj;
         return this.maxSize() == other.maxSize()
             && this.digits == other.digits;
     }
@@ -197,6 +198,6 @@ public final class DigitSet implements Iterable<Integer>, Comparable<DigitSet> {
     }
 
     private static char symbolOf(int digit) {
-        return (char) (FIRST_SYMBOL + (digit - 1));
+        return (char) (CIRCLED_DIGIT_ONE + (digit - 1));
     }
 }

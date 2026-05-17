@@ -1,9 +1,9 @@
 package org.velohaven.kaidoku.output;
 
 import org.junit.jupiter.api.Test;
-import org.velohaven.kaidoku.model.CellContent;
-import org.velohaven.kaidoku.model.CellStorage;
-import org.velohaven.kaidoku.model.Grid;
+import org.velohaven.kaidoku.model.DigitSetFactory;
+import org.velohaven.kaidoku.model.DigitSetStorage;
+import org.velohaven.kaidoku.model.Board;
 import org.velohaven.kaidoku.model.Range;
 
 class OutputTest {
@@ -13,22 +13,24 @@ class OutputTest {
         testOutput(3, 3);
     }
 
-    private CellStorage createContentList(int boxRowCount, int boxColumnCount) {
-        CellStorage cellStorage = new CellStorage(boxRowCount * boxColumnCount, boxColumnCount * boxRowCount);
+    private DigitSetStorage createContentList(int boxRowCount, int boxColumnCount) {
+        DigitSetFactory factory = DigitSetFactory.forMaxSize(boxRowCount * boxColumnCount);
+        DigitSetStorage digitSetStorage = new DigitSetStorage(boxRowCount * boxColumnCount);
+        System.out.println(digitSetStorage);
 
-        for (int rowIndex = 0; rowIndex < boxRowCount * boxColumnCount; rowIndex++) {
-            for (int columnIndex = 0; columnIndex < boxRowCount * boxColumnCount; columnIndex++) {
-                cellStorage.set(rowIndex, columnIndex, new CellContent("R" + rowIndex + "C" + columnIndex));
+        for (int row = 0; row < boxRowCount * boxColumnCount; row++) {
+            for (int column = 0; column < boxRowCount * boxColumnCount; column++) {
+                digitSetStorage.set(row, column,  factory.allDigits());
             }
         }
-        return cellStorage;
+        return digitSetStorage;
     }
 
     public void testOutput(int boxRowCount, int boxColumnCount) {
 
-        CellStorage cellStorage = createContentList(boxRowCount, boxColumnCount);
+        DigitSetStorage digitSetStorage = createContentList(boxRowCount, boxColumnCount);
 
-        Grid grid = new Grid(cellStorage, boxRowCount, boxColumnCount);
+        Board grid = new Board(digitSetStorage, boxRowCount, boxColumnCount);
 
         System.out.println(grid);
         for (Range cell : grid.getCells()) {

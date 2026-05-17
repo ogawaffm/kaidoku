@@ -1,51 +1,55 @@
 package org.velohaven.kaidoku.model;
 
-import java.util.Objects;
+import static org.velohaven.kaidoku.model.Validation.checkValue;
 
 public class DigitSetStorage {
 
-    private final int rowCount;
-    private final int columnCount;
+    private final int boardSideLength;
 
     private final DigitSet[][] digitSets;
 
-    public DigitSetStorage(int rowCount, int columnCount) {
-        this.rowCount = rowCount;
-        this.columnCount = columnCount;
+    public DigitSetStorage(int boardSideLength) {
+        this.boardSideLength = boardSideLength;
 
-        digitSets = new DigitSet[rowCount * columnCount][columnCount * rowCount];
-        DigitSetFactory digitSetFactory = DigitSetFactory.forMaxSize(columnCount * rowCount);
+        digitSets = new DigitSet[boardSideLength][boardSideLength];
+        DigitSetFactory digitSetFactory = DigitSetFactory.forMaxSize(boardSideLength);
 
-        for(int rowIndex = 0; rowIndex < rowCount) {
-            for (int columnIndex = 0; columnIndex < columnCount) {
-                digitSets[rowIndex, columnIndex] = digitSetFactory.allDigits();
+        for(int row = 0; row < this.boardSideLength; row++) {
+            for (int column = 0; column < boardSideLength; column++) {
+                digitSets[row][column] = digitSetFactory.allDigits();
             }
         }
-
     }
 
-    public int getRowCount() {
-        return rowCount;
+    public int getBoardSideLength() {
+        return boardSideLength;
     }
 
-    public int getColumnCount() {
-        return columnCount;
+    public DigitSet get(int row, int column) {
+        checkValue(column, 0, boardSideLength - 1, "column");
+        checkValue(row, 0, boardSideLength - 1, "row");
+        return digitSets[row][column];
     }
 
-    public int getSize() {
-        return rowCount * columnCount;
+    public void set(int row, int column, DigitSet digitSet) {
+        checkValue(column, 0, boardSideLength - 1, "column");
+        checkValue(row, 0, boardSideLength - 1, "row");
+        digitSets[row][column] = digitSet;
     }
 
-    public DigitSet get(int rowIndex, int columnIndex) {
-        Objects.checkIndex(rowIndex, rowCount);
-        Objects.checkIndex(columnIndex, columnCount);
-        return digitSets[rowIndex][columnIndex];
-    }
-
-    public void set(int rowIndex, int columnIndex, DigitSet digitSet) {
-        Objects.checkIndex(rowIndex, rowCount);
-        Objects.checkIndex(columnIndex, columnCount);
-        digitSets[rowIndex][columnIndex] = digitSet;
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (int row = 0; row < boardSideLength; row++) {
+            for (int column = 0; column < boardSideLength; column++) {
+                sb.append(digitSets[row][column]);
+                if (column < boardSideLength - 1) {
+                    sb.append(" | ");
+                }
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
 }

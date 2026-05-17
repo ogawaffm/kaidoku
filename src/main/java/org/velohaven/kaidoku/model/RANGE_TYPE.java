@@ -2,9 +2,9 @@ package org.velohaven.kaidoku.model;
 
 public enum RANGE_TYPE {
     /**
-     * Whole grid
+     * Whole board
      */
-    GRID,
+    BOARD,
 
     /**
      * A single row
